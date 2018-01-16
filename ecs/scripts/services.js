@@ -13,7 +13,7 @@ const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 const AWS_USERNAME = process.env.AWS_USERNAME;
 const AWS_CONFIG_REGION = 'us-east-1';
 const SHORT_GIT_HASH = process.env.CIRCLE_SHA1.substring(0, 7);
-const LOAD_BALANCER_ARN = 'arn:aws:elasticloadbalancing:us-east-1:963565653807:loadbalancer/app/microservicemovies-review/c455f0d18adeafbe';
+const LOAD_BALANCER_ARN = 'arn:aws:elasticloadbalancing:us-east-1:963565653807:loadbalancer/app/microservicemovies-review/b1ec1f2bd8db3c4c';
 const CLUSTER_NAME = 'microservicemovies-review';
 
 let USERS_TARGET_GROUP_ARN;
