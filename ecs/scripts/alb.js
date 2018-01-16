@@ -1,5 +1,6 @@
 const AWS = require('aws-sdk');
 
+const port = require('./listener').getPort;
 
 // globals
 
@@ -18,7 +19,6 @@ let MOVIES_TARGET_GROUP_ARN;
 let WEB_TARGET_GROUP_ARN;
 let LISTENER_ARN;
 
-const port = require('./listener').getPort;
 
 // config
 
@@ -32,6 +32,7 @@ AWS.config.region = AWS_CONFIG_REGION;
 
 const elbv2 = new AWS.ELBv2();
 const iam = new AWS.IAM();
+
 
 // methods
 
@@ -105,6 +106,7 @@ function addRule(targetGroup, pattern, listener, priority) {
     });
   });
 }
+
 
 // main
 
