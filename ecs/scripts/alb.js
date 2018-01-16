@@ -10,11 +10,15 @@ const AWS_USERNAME = process.env.AWS_USERNAME;
 const AWS_CONFIG_REGION = 'us-east-1';
 const SHORT_GIT_HASH = process.env.CIRCLE_SHA1.substring(0, 7);
 const VPC_ID = 'vpc-c8a2a6b0';
+const DEFAULT_TARGET_GROUP_ARN = 'arn:aws:elasticloadbalancing:us-east-1:963565653807:targetgroup/review-default/e5c083b453268f28';
+const LOAD_BALANCER_ARN = 'arn:aws:elasticloadbalancing:us-east-1:963565653807:loadbalancer/app/microservicemovies-review/c455f0d18adeafbe';
 
 let USERS_TARGET_GROUP_ARN;
 let MOVIES_TARGET_GROUP_ARN;
 let WEB_TARGET_GROUP_ARN;
+let LISTENER_ARN;
 
+const port = require('./listener').getPort;
 
 // config
 
@@ -28,7 +32,6 @@ AWS.config.region = AWS_CONFIG_REGION;
 
 const elbv2 = new AWS.ELBv2();
 const iam = new AWS.IAM();
-
 
 // methods
 
@@ -58,6 +61,50 @@ function addTargetGroup(service, port, path) {
   });
 }
 
+function addListener(port) {
+  return new Promise((resolve, reject) => {
+    var params = {
+      DefaultActions: [
+        {
+          TargetGroupArn: DEFAULT_TARGET_GROUP_ARN,
+          Type: 'forward'
+        }
+      ],
+      LoadBalancerArn: LOAD_BALANCER_ARN,
+      Port: port,
+      Protocol: 'HTTP'
+    };
+    elbv2.createListener(params, (err, data) => {
+      if (err) { reject(err); }
+      resolve(data);
+    });
+  });
+}
+
+function addRule(targetGroup, pattern, listener, priority) {
+  return new Promise((resolve, reject) => {
+    var params = {
+      Actions: [
+        {
+          TargetGroupArn: targetGroup,
+          Type: 'forward'
+        }
+     ],
+     Conditions: [
+      {
+        Field: 'path-pattern',
+        Values: [pattern]
+      }
+     ],
+     ListenerArn: listener,
+     Priority: priority
+    };
+    elbv2.createRule(params, (err, data) => {
+      if (err) { reject(err); }
+      resolve(data);
+    });
+  });
+}
 
 // main
 
@@ -79,5 +126,29 @@ return ensureAuthenticated()
 .then((res) => {
   WEB_TARGET_GROUP_ARN = res.TargetGroups[0].TargetGroupArn;
   console.log('Target Group Added!');
+  return port();
+})
+.then((port) => {
+  return addListener(port);
+})
+.then((res) => {
+  LISTENER_ARN = res.Listeners[0].ListenerArn;
+  console.log(`Listener added on port ${res.Listeners[0].Port}!`);
+  return addRule(USERS_TARGET_GROUP_ARN, '/users*', LISTENER_ARN, 1);
+})
+.then((res) => {
+  console.log('Rule Added!');
+  return addRule(MOVIES_TARGET_GROUP_ARN, '/movies*', LISTENER_ARN, 2);
+})
+.then((res) => {
+  console.log('Rule Added!');
+  return addRule(MOVIES_TARGET_GROUP_ARN, '/docs*', LISTENER_ARN, 3);
+})
+.then((res) => {
+  console.log('Rule Added!');
+  return addRule(WEB_TARGET_GROUP_ARN, '/*', LISTENER_ARN, 4);
+})
+.then((res) => {
+  console.log('Rule Added!');
 })
 .catch((err) => { console.log(err); });
