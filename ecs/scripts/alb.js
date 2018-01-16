@@ -9,7 +9,7 @@ const AWS_SECRET_ACCESS_KEY = process.env.AWS_SECRET_ACCESS_KEY;
 const AWS_USERNAME = process.env.AWS_USERNAME;
 const AWS_CONFIG_REGION = 'us-east-1';
 const SHORT_GIT_HASH = process.env.CIRCLE_SHA1.substring(0, 7);
-const VPC_ID=process.env.VPC_ID;
+const VPC_ID = 'vpc-c8a2a6b0';
 
 let USERS_TARGET_GROUP_ARN;
 let MOVIES_TARGET_GROUP_ARN;
